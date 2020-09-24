@@ -10,5 +10,7 @@ func InitRoutes(r *gin.Engine) {
 	authOnlyRoute := r.Group("/v1")
 
 	// APIs for Customer
-	authOnlyRoute.POST("/customer", controllers.InsertCustomer) // CREATE new
+	authOnlyRoute.POST("/customer", controllers.InsertCustomer)             // CREATE new
+	authOnlyRoute.GET("/customer/:legalEntityID/", controllers.GetCustomer) // Get One by ID
+
 }

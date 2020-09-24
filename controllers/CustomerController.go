@@ -3,12 +3,14 @@ package controllers
 import (
 	"customer/dbconnection"
 	"customer/models"
+	"customer/utils"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
+// InsertCustomer details
 func InsertCustomer(c *gin.Context) {
 
 	customer := models.Customer{}
@@ -38,4 +40,31 @@ func InsertCustomer(c *gin.Context) {
 			"data":   err.Error(),
 		})
 	}
+}
+
+// GetCustomer Details by legalEntityID
+func GetCustomer(c *gin.Context) {
+
+	legalEntityID := utils.ParamID(c, "legalEntityID")
+
+	customer := models.Customer{}
+	db := dbconnection.Get()
+
+	err := db.Model(&customer).Where("legal_entity_id = ?", legalEntityID).Select()
+	if err == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status": "success",
+			"data": gin.H{
+				"customer": customer,
+			},
+		})
+		return
+	}
+	c.JSON(http.StatusNotFound, gin.H{
+		"status": "fail",
+		"data": gin.H{
+			"customer": nil,
+		},
+	})
+
 }
