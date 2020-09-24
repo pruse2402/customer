@@ -109,3 +109,26 @@ func UpdateCustomer(c *gin.Context) {
 	})
 
 }
+
+// RemoveCustomer to delete the customer
+func RemoveCustomer(c *gin.Context) {
+
+	legalEntityID := utils.ParamID(c, "legalEntityID")
+	customer := models.Customer{}
+
+	db := dbconnection.Get()
+
+	if _, err := db.Model(&customer).Where("legal_entity_id=?", legalEntityID).Delete(); err == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "success",
+			"message": "customer removed successfully",
+		})
+		return
+	} else {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": "error",
+			"data":   err.Error(),
+		})
+	}
+
+}
