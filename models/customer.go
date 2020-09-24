@@ -5,7 +5,7 @@ import (
 )
 
 type Customer struct {
-	LegalEntityID           int       `json:"legalEntityID"`
+	LegalEntityID           int64     `json:"legalEntityID"`
 	BankruptcyIndicatorFlag bool      `json:"bankruptcyIndicatorFlag"`
 	CompanyName             string    `json:"companyName" sql:",notnull"`
 	FirstName               string    `json:"firstName" sql:",notnull"`

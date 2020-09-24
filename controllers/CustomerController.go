@@ -50,7 +50,7 @@ func GetCustomer(c *gin.Context) {
 	customer := models.Customer{}
 	db := dbconnection.Get()
 
-	err := db.Model(&customer).Where("legal_entity_id = ?", legalEntityID).Select()
+	err := db.Model(&customer).Where("legal_entity_id = ?", int64(legalEntityID)).Select()
 	if err == nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status": "success",
@@ -65,6 +65,47 @@ func GetCustomer(c *gin.Context) {
 		"data": gin.H{
 			"customer": nil,
 		},
+	})
+
+}
+
+// UpdateCustomer to modify
+func UpdateCustomer(c *gin.Context) {
+
+	legalEntityID := utils.ParamID(c, "legalEntityID")
+
+	customer := models.Customer{}
+	db := dbconnection.Get()
+	err := db.Model(&customer).Where("legal_entity_id = ?", int64(legalEntityID)).Select()
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status": "fail",
+			"data":   "customer not found",
+		})
+		return
+	}
+
+	if err := c.BindJSON(&customer); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"status": "fail",
+			"data":   "invalid request body; " + err.Error(),
+		})
+		return
+	}
+
+	_, err = db.Model(&customer).Column("bankruptcy_indicator_flag", "company_name", "first_name", "last_name", "legal_entity_stage", "legal_entity_type", "date_of_birth").Where("legal_entity_id=?", legalEntityID).Returning("*").Update()
+	if err == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status": "success",
+			"data": gin.H{
+				"customer": customer,
+			},
+		})
+		return
+	}
+	c.JSON(http.StatusInternalServerError, gin.H{
+		"status": "error",
+		"data":   err.Error(),
 	})
 
 }
