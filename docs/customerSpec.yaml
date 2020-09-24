@@ -1,0 +1,70 @@
+openapi: 3.0.0
+security:
+  - Authorization: []
+  - Id: []
+info:
+  title: Rest API for customers
+  contact: {}
+  version: "1.0"
+servers:
+  - url: http://localhost:8081
+    variables: {}
+paths:
+  /v1/customer:
+    post:
+      tags:
+        - Customer
+      operationId: InsertCustomer
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Customer"
+        required: true
+      responses:
+        200:
+          description: User Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+components:
+  schemas:
+    Customer:
+      title: Customer
+      type: object
+      properties:
+        bankruptcyIndicatorFlag:
+          type: boolean
+        companyName:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        legalEntityId:
+          type: integer
+          format: int
+        legalEntityStage:
+          type: string
+        legalEntityType:
+          type: string
+        createdDate:
+          type: string
+        dateOfBirth:
+          type: string
+    SuccessResponse:
+      title: SuccessResponse
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          $ref: "#/components/schemas/Data"
+    Data:
+      title: Data
+      type: object
+      properties:
+        customer: 
+          $ref: "#/components/schemas/Customer"
