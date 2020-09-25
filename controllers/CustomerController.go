@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"customer/dbconnection"
+	"customer/internals"
 	"customer/models"
 	"customer/utils"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -148,29 +148,27 @@ func SearchCustomer(c *gin.Context) {
 		return
 	}
 
-	queryStr := fmt.Sprintf(`SELECT * FROM customers where `)
-	if customerRequest.LegalEntityID > 0 {
-		legalEntityQuery := fmt.Sprintf("legal_entity_id = '%d'", customerRequest.LegalEntityID)
-		queryStr = queryStr + legalEntityQuery
-	}
+	where := internals.WhereQueryStrUpdate("", "company_name", customerRequest.CompanyName, "")
 
-	if customerRequest.CompanyName != "" {
-		companyQuery := fmt.Sprintf("AND company_name = '%v'", customerRequest.CompanyName)
-		queryStr = queryStr + companyQuery
+	if customerRequest.LegalEntityID > 0 {
+		where = internals.WhereQueryIntUpdate(where, "legal_entity_id", customerRequest.LegalEntityID, "AND")
 	}
 
 	if customerRequest.FirstName != "" {
-		firstNameQuery := fmt.Sprintf("AND first_name = '%v'", customerRequest.FirstName)
-		queryStr = queryStr + firstNameQuery
+		where = internals.WhereQueryStrUpdate(where, "first_name", customerRequest.FirstName, "AND")
 	}
 
 	if customerRequest.LastName != "" {
-		lastNameQuery := fmt.Sprintf("AND last_name = '%v'", customerRequest.LastName)
-		queryStr = queryStr + lastNameQuery
+		where = internals.WhereQueryStrUpdate(where, "last_name", customerRequest.LastName, "AND")
 	}
 
 	customerIns := []models.Customer{}
-	_, err := db.Query(&customerIns, queryStr)
+
+	query := db.Model(&customerIns)
+	if where != "" {
+		query = query.Where(where)
+	}
+	err := query.Select()
 	if err == nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status": "success",
