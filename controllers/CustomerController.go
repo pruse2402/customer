@@ -4,6 +4,7 @@ import (
 	"customer/dbconnection"
 	"customer/models"
 	"customer/utils"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -131,4 +132,48 @@ func RemoveCustomer(c *gin.Context) {
 		})
 	}
 
+}
+
+// SearchCustomer to filter the customer
+func SearchCustomer(c *gin.Context) {
+
+	customer := []models.Customer{}
+	db := dbconnection.Get()
+
+	legalEntityID := utils.ParamID(c, "legalEntityID")
+
+	queryStr := fmt.Sprintf(`SELECT * FROM customers WHERE legal_entity_id = %d`, int64(legalEntityID))
+
+	params, _ := ListQueryParams(c)
+
+	if params.CompanyName != "" {
+		companyQuery := fmt.Sprintf(" AND company_name = '%v'", params.CompanyName)
+		queryStr = queryStr + companyQuery
+	}
+
+	if params.FirstName != "" {
+		firstNameQuery := fmt.Sprintf(" AND first_name = '%v'", params.FirstName)
+		queryStr = queryStr + firstNameQuery
+	}
+
+	if params.LastName != "" {
+		lastNameQuery := fmt.Sprintf(" AND last_name = '%v'", params.LastName)
+		queryStr = queryStr + lastNameQuery
+	}
+
+	_, err := db.Query(&customer, queryStr)
+	if err == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status": "success",
+			"data": gin.H{
+				"customer": customer,
+			},
+		})
+		return
+	} else {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": "error",
+			"data":   err.Error(),
+		})
+	}
 }
