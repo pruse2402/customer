@@ -137,36 +137,45 @@ func RemoveCustomer(c *gin.Context) {
 // SearchCustomer to filter the customer
 func SearchCustomer(c *gin.Context) {
 
-	customer := []models.Customer{}
+	customerRequest := models.CustomerRequestBody{}
 	db := dbconnection.Get()
 
-	legalEntityID := utils.ParamID(c, "legalEntityID")
+	if err := c.BindJSON(&customerRequest); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"status": "fail",
+			"data":   "invalid request body; " + err.Error(),
+		})
+		return
+	}
 
-	queryStr := fmt.Sprintf(`SELECT * FROM customers WHERE legal_entity_id = %d`, int64(legalEntityID))
+	queryStr := fmt.Sprintf(`SELECT * FROM customers where `)
+	if customerRequest.LegalEntityID > 0 {
+		legalEntityQuery := fmt.Sprintf("legal_entity_id = '%d'", customerRequest.LegalEntityID)
+		queryStr = queryStr + legalEntityQuery
+	}
 
-	params, _ := ListQueryParams(c)
-
-	if params.CompanyName != "" {
-		companyQuery := fmt.Sprintf(" AND company_name = '%v'", params.CompanyName)
+	if customerRequest.CompanyName != "" {
+		companyQuery := fmt.Sprintf("AND company_name = '%v'", customerRequest.CompanyName)
 		queryStr = queryStr + companyQuery
 	}
 
-	if params.FirstName != "" {
-		firstNameQuery := fmt.Sprintf(" AND first_name = '%v'", params.FirstName)
+	if customerRequest.FirstName != "" {
+		firstNameQuery := fmt.Sprintf("AND first_name = '%v'", customerRequest.FirstName)
 		queryStr = queryStr + firstNameQuery
 	}
 
-	if params.LastName != "" {
-		lastNameQuery := fmt.Sprintf(" AND last_name = '%v'", params.LastName)
+	if customerRequest.LastName != "" {
+		lastNameQuery := fmt.Sprintf("AND last_name = '%v'", customerRequest.LastName)
 		queryStr = queryStr + lastNameQuery
 	}
 
-	_, err := db.Query(&customer, queryStr)
+	customerIns := []models.Customer{}
+	_, err := db.Query(&customerIns, queryStr)
 	if err == nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status": "success",
 			"data": gin.H{
-				"customer": customer,
+				"customer": customerIns,
 			},
 		})
 		return

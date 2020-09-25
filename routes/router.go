@@ -10,10 +10,10 @@ func InitRoutes(r *gin.Engine) {
 	authOnlyRoute := r.Group("/v1")
 
 	// APIs for Customer
-	authOnlyRoute.POST("/customer", controllers.InsertCustomer)                      // CREATE new
-	authOnlyRoute.GET("/customer/:legalEntityID", controllers.GetCustomer)           // Get One by ID
-	authOnlyRoute.PUT("/customer/:legalEntityID", controllers.UpdateCustomer)        // Modify
-	authOnlyRoute.DELETE("/customer/:legalEntityID", controllers.RemoveCustomer)     // Remove
-	authOnlyRoute.POST("/searchCustomer/:legalEntityID", controllers.SearchCustomer) // Remove
+	authOnlyRoute.POST("/customer", controllers.InsertCustomer)                  // CREATE new
+	authOnlyRoute.GET("/customer/:legalEntityID", controllers.GetCustomer)       // Get One by ID
+	authOnlyRoute.PUT("/customer/:legalEntityID", controllers.UpdateCustomer)    // Modify
+	authOnlyRoute.DELETE("/customer/:legalEntityID", controllers.RemoveCustomer) // Remove
+	authOnlyRoute.POST("/searchCustomer", controllers.SearchCustomer)            // Remove
 
 }
