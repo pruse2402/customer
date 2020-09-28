@@ -15,10 +15,10 @@ var db *pg.DB
 //Connect database
 func Connect() {
 	dbCon := pg.Connect(&pg.Options{
-		Addr:     config.DatabaseAddr,
-		User:     config.DatabaseUsername,
-		Password: config.DatabasePassword,
-		Database: config.DatabaseName,
+		Addr:     config.Cfg.DB_Address,
+		User:     config.Cfg.DB_USERNAME,
+		Password: config.Cfg.DB_PASSWORD,
+		Database: config.Cfg.DB_NAME,
 	})
 
 	db = dbCon

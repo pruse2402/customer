@@ -10,7 +10,7 @@ func WhereQueryIntUpdate(str, key string, value int64, condition string) string 
 		str = fmt.Sprintf("%s %s ", str, condition)
 	}
 
-	str = fmt.Sprintf("%s%s=%d", str, key, value)
+	str = fmt.Sprintf("%s %s=%d", str, key, value)
 
 	return str
 }
@@ -25,7 +25,7 @@ func WhereQueryStrUpdate(str, key, value, condition string) string {
 		return str
 	}
 
-	str = fmt.Sprintf("%s%s='%s'", str, key, value)
+	str = fmt.Sprintf("%s %s='%s'", str, key, value)
 
 	return str
 }

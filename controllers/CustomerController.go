@@ -4,8 +4,8 @@ import (
 	"customer/dbconnection"
 	"customer/internals"
 	"customer/models"
-	"customer/utils"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +17,7 @@ func InsertCustomer(c *gin.Context) {
 	customer := models.Customer{}
 
 	if err := c.BindJSON(&customer); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"status": "fail",
 			"data":   "invalid request body; " + err.Error(),
 		})
@@ -27,44 +27,45 @@ func InsertCustomer(c *gin.Context) {
 	customer.CreatedDate = time.Now().UTC()
 	db := dbconnection.Get()
 
-	if _, err := db.Model(&customer).Insert(); err == nil {
-		c.JSON(http.StatusCreated, gin.H{
-			"status": "success",
-			"data": gin.H{
-				"customer": customer,
-			},
-		})
-		return
-	} else {
+	if _, err := db.Model(&customer).Insert(); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "error",
 			"data":   err.Error(),
 		})
+		return
 	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"status": "success",
+		"data": gin.H{
+			"customer": customer,
+		},
+	})
 }
 
 // GetCustomer Details by legalEntityID
 func GetCustomer(c *gin.Context) {
 
-	legalEntityID := utils.ParamID(c, "legalEntityID")
+	legalEntityID := ParamID(c, "legalEntityID")
 
 	customer := models.Customer{}
 	db := dbconnection.Get()
 
 	err := db.Model(&customer).Where("legal_entity_id = ?", int64(legalEntityID)).Select()
-	if err == nil {
-		c.JSON(http.StatusOK, gin.H{
-			"status": "success",
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status": "fail",
 			"data": gin.H{
-				"customer": customer,
+				"customer": nil,
 			},
 		})
 		return
 	}
-	c.JSON(http.StatusNotFound, gin.H{
-		"status": "fail",
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "success",
 		"data": gin.H{
-			"customer": nil,
+			"customer": customer,
 		},
 	})
 
@@ -73,7 +74,7 @@ func GetCustomer(c *gin.Context) {
 // UpdateCustomer to modify
 func UpdateCustomer(c *gin.Context) {
 
-	legalEntityID := utils.ParamID(c, "legalEntityID")
+	legalEntityID := ParamID(c, "legalEntityID")
 
 	customer := models.Customer{}
 	db := dbconnection.Get()
@@ -87,7 +88,7 @@ func UpdateCustomer(c *gin.Context) {
 	}
 
 	if err := c.BindJSON(&customer); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"status": "fail",
 			"data":   "invalid request body; " + err.Error(),
 		})
@@ -95,18 +96,19 @@ func UpdateCustomer(c *gin.Context) {
 	}
 
 	_, err = db.Model(&customer).Column("bankruptcy_indicator_flag", "company_name", "first_name", "last_name", "legal_entity_stage", "legal_entity_type", "date_of_birth").Where("legal_entity_id=?", legalEntityID).Returning("*").Update()
-	if err == nil {
-		c.JSON(http.StatusOK, gin.H{
-			"status": "success",
-			"data": gin.H{
-				"customer": customer,
-			},
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": "error",
+			"data":   err.Error(),
 		})
 		return
 	}
-	c.JSON(http.StatusInternalServerError, gin.H{
-		"status": "error",
-		"data":   err.Error(),
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"data": gin.H{
+			"customer": customer,
+		},
 	})
 
 }
@@ -114,23 +116,23 @@ func UpdateCustomer(c *gin.Context) {
 // RemoveCustomer to delete the customer
 func RemoveCustomer(c *gin.Context) {
 
-	legalEntityID := utils.ParamID(c, "legalEntityID")
+	legalEntityID := ParamID(c, "legalEntityID")
 	customer := models.Customer{}
 
 	db := dbconnection.Get()
 
-	if _, err := db.Model(&customer).Where("legal_entity_id=?", legalEntityID).Delete(); err == nil {
-		c.JSON(http.StatusOK, gin.H{
-			"status":  "success",
-			"message": "customer removed successfully",
-		})
-		return
-	} else {
+	if _, err := db.Model(&customer).Where("legal_entity_id=?", legalEntityID).Delete(); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "error",
 			"data":   err.Error(),
 		})
+		return
 	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "customer removed successfully",
+	})
 
 }
 
@@ -141,7 +143,7 @@ func SearchCustomer(c *gin.Context) {
 	db := dbconnection.Get()
 
 	if err := c.BindJSON(&customerRequest); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"status": "fail",
 			"data":   "invalid request body; " + err.Error(),
 		})
@@ -169,18 +171,23 @@ func SearchCustomer(c *gin.Context) {
 		query = query.Where(where)
 	}
 	err := query.Select()
-	if err == nil {
-		c.JSON(http.StatusOK, gin.H{
-			"status": "success",
-			"data": gin.H{
-				"customer": customerIns,
-			},
-		})
-		return
-	} else {
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "error",
 			"data":   err.Error(),
 		})
+		return
 	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"data": gin.H{
+			"customer": customerIns,
+		},
+	})
+}
+
+func ParamID(c *gin.Context, name string) uint64 {
+	id, _ := strconv.ParseUint(c.Params.ByName(name), 10, 64)
+	return id
 }
