@@ -1,11 +1,10 @@
 package dbconnection
 
 import (
+	"customer/config"
 	"fmt"
 	"log"
 	"os"
-
-	"customer/config"
 
 	"github.com/go-pg/pg"
 )
@@ -15,10 +14,10 @@ var db *pg.DB
 //Connect database
 func Connect() {
 	dbCon := pg.Connect(&pg.Options{
-		Addr:     config.Cfg.DB_Address,
-		User:     config.Cfg.DB_USERNAME,
-		Password: config.Cfg.DB_PASSWORD,
-		Database: config.Cfg.DB_NAME,
+		Addr:     config.Cfg.Database.Address,
+		User:     config.Cfg.Database.Username,
+		Password: config.Cfg.Database.Password,
+		Database: config.Cfg.Database.Name,
 	})
 
 	db = dbCon

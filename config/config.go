@@ -1,44 +1,50 @@
 package config
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"log"
-	"sync"
+	"fmt"
+	"os"
+
+	"github.com/kelseyhightower/envconfig"
+	"gopkg.in/yaml.v2"
 )
 
 type Config struct {
-	DEV_MODE    bool   `json:"dev_mode"`
-	STAG_MODE   bool   `json:"stag_mode"`
-	PROD_MODE   bool   `json:"prod_mode"`
-	APP_VERSION string `json:"app_version"`
-
-	// SERVER CONFIG
-	APP_URL     string `json:"app_url"`
-	DB_NAME     string `json:"db_name"`
-	DB_USERNAME string `json:"db_username"`
-	DB_PASSWORD string `json:"db_password"`
-	DB_Address  string `json:"db_address"`
-	Port        int    `json:"port"`
+	Server struct {
+		Port int    `yaml:"port", envconfig:"SERVER_PORT"`
+		Host string `yaml:"host", envconfig:"SERVER_HOST"`
+	} `yaml:"server"`
+	Database struct {
+		Name     string `yaml:"name", envconfig:"DB_NAME"`
+		Username string `yaml:"user", envconfig:"DB_USERNAME"`
+		Password string `yaml:"password", envconfig:"DB_PASSWORD"`
+		Address  string `yaml:"address", envconfig:"DB_ADDRESS"`
+	} `yaml:"database"`
 }
 
-var (
-	Cfg  Config
-	once sync.Once
-)
+var Cfg Config
 
-// Parse parses the json configuration file
-// And converting it into native type
-func Parse(file string) error {
-	once.Do(func() {
-		// Reading the flags
-		data, err := ioutil.ReadFile(file)
-		if err != nil {
-			log.Println("Error in ReadFile:", err)
-		}
-		if err := json.Unmarshal(data, &Cfg); err != nil {
-			log.Println("Error in Unmarshal:", err)
-		}
-	})
-	return nil
+func processError(err error) {
+	fmt.Println(err)
+	os.Exit(2)
+}
+
+func ReadFile(cfg *Config) {
+	f, err := os.Open("config/dev.yml")
+	if err != nil {
+		processError(err)
+	}
+	defer f.Close()
+
+	decoder := yaml.NewDecoder(f)
+	err = decoder.Decode(cfg)
+	if err != nil {
+		processError(err)
+	}
+}
+
+func ReadEnv(cfg *Config) {
+	err := envconfig.Process("", cfg)
+	if err != nil {
+		processError(err)
+	}
 }

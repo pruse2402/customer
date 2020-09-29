@@ -1,0 +1,11 @@
+# Server configurations
+server:
+  host: "localhost"
+  port: 8081
+
+# Database credentials
+database:
+  name: "customer"
+  user: "customer"
+  password: "customer"
+  address: "localhost:5432"
