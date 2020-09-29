@@ -184,3 +184,109 @@ func TestUpdateCustomer(t *testing.T) {
 		})
 	}
 }
+
+func TestRemoveCustomer(t *testing.T) {
+
+	tests := []struct {
+		name           string
+		expectedStatus int
+		path           string
+		status         string
+		legalEntityID  string
+	}{
+		{
+			name:           "customerRemoveApi",
+			expectedStatus: 200,
+			path:           "http://localhost:8081/v1",
+			status:         "success",
+			legalEntityID:  "10",
+		},
+		{
+			name:           "customerRemoveApi",
+			expectedStatus: 404,
+			path:           "http://localhost:8081/v1",
+			status:         "error",
+			legalEntityID:  "0",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			res, _ := http.Get(tt.path + "/customer/" + tt.legalEntityID)
+			if res.StatusCode != tt.expectedStatus {
+				t.Errorf("status unmached: got %d, expectes %d", res.StatusCode,
+					tt.expectedStatus)
+			}
+		})
+	}
+}
+
+func TestSearchCustomer(t *testing.T) {
+	type fields struct {
+		FieldLogger logrus.FieldLogger
+		Body        models.Customer
+	}
+
+	tests := []struct {
+		name           string
+		expectedStatus int
+		status         string
+		path           string
+		fields         fields
+	}{
+		{
+			name:           "customerSearchApi",
+			expectedStatus: 200,
+			path:           "http://localhost:8081/v1",
+			status:         "success",
+			fields: fields{
+				Body: models.Customer{
+					LegalEntityID:           1,
+					BankruptcyIndicatorFlag: true,
+					CompanyName:             "xcompany",
+					FirstName:               "sandeep",
+					LastName:                "Dev",
+					LegalEntityStage:        "sandeep",
+					LegalEntityType:         "sandeep",
+				},
+			},
+		},
+		{
+			name:           "customerSearchApi",
+			expectedStatus: 400,
+			path:           "http://localhost:8081/v1",
+			status:         "fail",
+			fields: fields{
+				Body: models.Customer{},
+			},
+		},
+		{
+			name:           "customerSearchApi",
+			expectedStatus: 500,
+			path:           "http://localhost:8081/v1",
+			status:         "fail",
+			fields: fields{
+				Body: models.Customer{
+					LegalEntityID:           11,
+					BankruptcyIndicatorFlag: true,
+					CompanyName:             "xcompany",
+					FirstName:               "sandeep",
+					LastName:                "Dev",
+					LegalEntityStage:        "sandeep",
+					LegalEntityType:         "sandeep",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := new(bytes.Buffer)
+			json.NewEncoder(b).Encode(tt.fields.Body)
+
+			res, _ := http.Post(tt.path+"/searchCustomer", "", b)
+			if res.StatusCode != tt.expectedStatus {
+				t.Errorf("status unmached: got %d, expectes %d", res.StatusCode,
+					tt.expectedStatus)
+			}
+		})
+	}
+}
